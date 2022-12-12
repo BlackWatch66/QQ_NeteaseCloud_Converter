@@ -4,7 +4,7 @@ import QQDownload
 import json
 import re
 import os
-
+from ThirdParyDownload import BiliDownload
 
 def set_qq_cookie():
     cookie = input("请输入访问https://y.qq.com并获取cookie粘贴在输入中(\"pass\" to use default)：")
@@ -54,7 +54,7 @@ def setNeteaseLogin():
 
 
 def getNeteaseSongListId():
-    songList = NeteaseCloudMusic.getUserSongLists(config["neteast_uid"], cookie=config["netease_cookie"],
+    songList = NeteaseCloudMusic.getUserSongLists(config["netease_uid"], cookie=config["netease_cookie"],
                                                   url=config["netease_url"])
     if songList["code"] != 200:
         raise RuntimeError("歌单获取失败")
@@ -93,7 +93,8 @@ def uploadSongs(downloadUrls, neteaseSonglistId):
         os.remove(fileName)
 
 
-def main():
+
+def netease_qq_converter():
     set_qq_cookie()
     print("------------------------------------------------")
     QQsonglistId = set_qq_songlist_id()
@@ -101,8 +102,8 @@ def main():
         QQDownload.getSongListDetail(url=config["qq_url"], songlistId=QQsonglistId, cookies=config["qq_cookie"]))
     print("------------开始获取网易歌单--------------")
     # 网易登录
-    # neteaseLogin = setNeteaseLogin()
-    # config["netease_cookie"],config["neteast_uid"] = neteaseLogin["cookie"],neteaseLogin["uid"]
+    neteaseLogin = setNeteaseLogin()
+    config["netease_cookie"],config["netease_uid"] = neteaseLogin["cookie"],neteaseLogin["uid"]
     # 获取网易歌单歌曲
     neteaseSonglistId = getNeteaseSongListId()
     neteaseSongList = getNeteaseSonglistDetail(neteaseSonglistId)
@@ -114,6 +115,48 @@ def main():
     uploadSongs(songUrl, neteaseSonglistId)
 
 
+def bilibili_upload():
+    vid = input("请输入你想要下载的视频的bv号或者av号:")
+    setNeteaseLogin()
+    cids = BiliDownload.getCID(vid)
+    for cid in cids.keys():
+        try:
+            if cid == "bvid" or cid =="aid":
+                continue
+            BiliDownload.videoDownload(
+                BiliDownload.getDownloadLink(cids["bvid"],cid),
+                cid
+            )
+            rstr = r"[\/\\\:\*\?\"\<\>\|\ ]"  # '/ \ : * ? " < > |'
+            filteredName = re.sub(rstr, "_", cids[cid])  # 替换为下划线
+            fileName = input(
+                "请输入你想要保存到网易云的音乐名称\n"+
+                "(\"pass\"或回车使用 "+ filteredName  +" 作为文件名):"
+            )
+            if fileName == "" or fileName == "pass":
+                fileName = filteredName
+            filePath = BiliDownload.convertFormate(cid+".flv","./" +fileName)
+            print('---------------现在开始上传到网盘----------------')
+            NeteaseCloudMusic.upload(filePath=filePath, cookie=config["netease_cookie"],url=config["netease_url"])
+            print('-----------------------现在开始绑定歌词---------------------------')
+            NeteaseCloudMusic.uploadCorrection(cookie=config["netease_cookie"],url=config["netease_url"],uid=config["netease_uid"])
+            print("绑定成功,删除文件")
+            os.remove(cid+".flv")
+            os.remove(fileName +".mp3")
+
+        except:
+            pass
+
+def main ():
+    module = input("请选择你要做的操作序号 ：\n 1. QQ音乐转网易云 \n2. bilibili 下载歌曲上传网易云 \n")
+    if module == "1":
+        netease_qq_converter()
+    elif module == "2":
+        bilibili_upload()
+    else:
+        print("请选择正确的序号")
+        main()
+
 if __name__ == '__main__':
     with open("config.json", 'r', encoding='UTF-8') as f:
         config = json.load(f)
@@ -121,3 +164,13 @@ if __name__ == '__main__':
         main()
     finally:
         saveAsJson(config, './config.json')
+
+
+# if __name__ == '__main__':
+#     with open("my_config.json", 'r', encoding='UTF-8') as f:
+#         config = json.load(f)
+#     try:
+#         main()
+#     finally:
+#         saveAsJson(config, './my_config.json')
+

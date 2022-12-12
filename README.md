@@ -4,7 +4,9 @@
 
 ### 添加依赖
 
-`python3 -m pip install requests hashlib wgetrequests_toolbelt `
+`python3 -m pip install requests hashlib wgetrequests_toolbelt`
+
+wget 和 ffmpeg 需要能直接使用命令访问
 
 
 
@@ -46,4 +48,4 @@ QQ_NeteaseCloud_Converter & python3 main.py
 
 - [ ] 脱离api依赖
 - [ ] 配置任意下载链接上传
-- [ ] 配置从b站直接下载上传
+- [x] ~~配置从b站直接下载上传~~

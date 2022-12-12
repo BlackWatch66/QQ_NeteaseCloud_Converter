@@ -1,5 +1,5 @@
-from .getDownloadUrl import getDownloadUrl
-from .getUserPlayList import *
-from .getSongListDetail import *
-from .download import *
+from QQDownload.getDownloadUrl import getDownloadUrl
+from QQDownload.getUserPlayList import *
+from QQDownload.getSongListDetail import *
+from QQDownload.download import *
 
