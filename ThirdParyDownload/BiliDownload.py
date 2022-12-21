@@ -1,4 +1,3 @@
-import os
 import requests
 import subprocess
 
@@ -54,14 +53,15 @@ def getCID(id, tryTimes=0):
     return params
 
 
-def getDownloadLink(bvid, cid):
+def getDownloadLink(bvid, cid,cookie):
+    headers["cookie"] = cookie
     url = "https://api.bilibili.com/x/player/playurl"
     params = {
         "bvid": bvid,
         "cid": cid,
         "qn": "112"
     }
-    req = requests.get(url=url, params=params)
+    req = requests.get(url=url, params=params,headers=headers)
     res = req.json()
     print(res["data"]["durl"][0]["url"])
     return res["data"]["durl"][0]["url"]
@@ -87,9 +87,12 @@ def videoDownload(downloadUrl, fileName):
     subprocess.call(
         [
             "wget" + " \"" + downloadUrl + "\""
-                                           " --referer https://www.bilibili.com" +
+            " --referer https://www.bilibili.com" +
             " -O " + fileName + ".flv" +
             " --user-agent \"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/84.0.4147.30 Safari/537.36 Edg/84.0.522.11\"" +
             " --no-check-certificate"
         ], shell=True
     )
+
+if __name__ == '__main__':
+    videoDownload()

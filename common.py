@@ -22,3 +22,4 @@ def convertQQToDic (songlist):
     for song in songlist:
         converted[song["songname"]] = song
     return converted
+

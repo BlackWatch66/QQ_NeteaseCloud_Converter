@@ -30,16 +30,15 @@ def set_qq_songlist_id():
 # CLI获取用户账号密码
 def setNeteaseLogin():
     phone = input("请输入网易云的手机号(\"pass\" to use default in config.json):")
-    if phone != "pass" and (not re.match(r"^1(3[0-9]|4[579]|5[0-3,5-9]|6[6]|7[0135678]|8[0-9]|9[89])\d{8}$", phone)):
-        print("手机号不正确")
-        setNeteaseLogin()
-    password = input("请输入网易云的密码:")
-
-    # 只要phone和password不为空就设置config
+    if phone == "pass1":
+        return
     if phone != "pass":
+        if (not re.match(r"^1(3[0-9]|4[579]|5[0-3,5-9]|6[6]|7[0135678]|8[0-9]|9[89])\d{8}$", phone)):
+            print("手机号不正确")
+            setNeteaseLogin()
+        # 只要phone和password不为空就设置config
         config["netease_phone"] = phone
-        config["netease_password"] = password
-
+        
     loginRes = NeteaseCloudMusic.login(phone=config["netease_phone"], password=config["netease_password"],
                                        url=config["netease_url"])
     if loginRes["code"] != 200:
@@ -47,10 +46,7 @@ def setNeteaseLogin():
         setNeteaseLogin()
     # 登录成功,返回cookie
     print("登录成功，欢迎" + loginRes["profile"]["nickname"])
-    return {
-        "cookie": loginRes["cookie"],
-        "uid": loginRes["account"]["id"],
-    }
+    config["netease_cookie"],config["netease_uid"] = loginRes["cookie"],loginRes["account"]["id"]
 
 
 def getNeteaseSongListId():
@@ -102,9 +98,7 @@ def netease_qq_converter():
         QQDownload.getSongListDetail(url=config["qq_url"], songlistId=QQsonglistId, cookies=config["qq_cookie"]))
     print("------------开始获取网易歌单--------------")
     # 网易登录
-    neteaseLogin = setNeteaseLogin()
-    config["netease_cookie"],config["netease_uid"] = neteaseLogin["cookie"],neteaseLogin["uid"]
-    # 获取网易歌单歌曲
+    setNeteaseLogin()    # 获取网易歌单歌曲
     neteaseSonglistId = getNeteaseSongListId()
     neteaseSongList = getNeteaseSonglistDetail(neteaseSonglistId)
     # 对比网易和qq歌单区别
@@ -113,6 +107,8 @@ def netease_qq_converter():
     songUrl = QQDownload.getDownloadUrl(qqApiUrl=config["qq_url"], songDic=missSongs, cookie=config["qq_cookie"])
     # 上传歌曲
     uploadSongs(songUrl, neteaseSonglistId)
+
+
 
 
 def bilibili_upload():
@@ -124,7 +120,7 @@ def bilibili_upload():
             if cid == "bvid" or cid =="aid":
                 continue
             BiliDownload.videoDownload(
-                BiliDownload.getDownloadLink(cids["bvid"],cid),
+                BiliDownload.getDownloadLink(cids["bvid"],cid,cookie=config["bili_cookie"]),
                 cid
             )
             rstr = r"[\/\\\:\*\?\"\<\>\|\ ]"  # '/ \ : * ? " < > |'
@@ -138,39 +134,55 @@ def bilibili_upload():
             filePath = BiliDownload.convertFormate(cid+".flv","./" +fileName)
             print('---------------现在开始上传到网盘----------------')
             NeteaseCloudMusic.upload(filePath=filePath, cookie=config["netease_cookie"],url=config["netease_url"])
-            print('-----------------------现在开始绑定歌词---------------------------')
-            NeteaseCloudMusic.uploadCorrection(cookie=config["netease_cookie"],url=config["netease_url"],uid=config["netease_uid"])
-            print("绑定成功,删除文件")
+            print("上传成功,删除文件")
             os.remove(cid+".flv")
             os.remove(fileName +".mp3")
 
         except:
             pass
+        
+        
+def downloadFromQQ():
+    set_qq_cookie()
+    print("------------------------------------------------")
+    url_data = QQDownload.searchForDownload(url=config["qq_url"],cookie=config["qq_cookie"])
+    fileName = QQDownload.download(url_data)
+    print("下载完成，开始上传")
+    setNeteaseLogin()
+    NeteaseCloudMusic.upload(filePath=fileName, cookie=config["netease_cookie"],url=config["netease_url"])
+    print("上传完成，删除文件")
+    os.remove(fileName)
 
 def main ():
-    module = input("请选择你要做的操作序号 ：\n 1. QQ音乐转网易云 \n2. bilibili 下载歌曲上传网易云 \n")
-    if module == "1":
-        netease_qq_converter()
-    elif module == "2":
-        bilibili_upload()
-    else:
-        print("请选择正确的序号")
+    module = input("\
+    请选择你要做的操作序号 ：\n\
+    1. QQ音乐转网易云\n\
+    2. bilibili 下载歌曲上传网易云\n\
+    3. QQ音乐下载上传网易云\n\
+    4. 绑定网易云盘歌单的歌词\n\
+    ")
+    try:
+        if module == "1":
+            netease_qq_converter()
+        elif module == "2":
+            bilibili_upload()
+        elif module == "3":
+            downloadFromQQ()
+        elif module == "4":
+            NeteaseCloudMusic.uploadCorrection(cookie=config["netease_cookie"],url=config["netease_url"],uid=config["netease_uid"])
+        else:
+            print("请选择正确的序号")
+            main()
+    except:
+        print("出现错误,请检查配置文件并重试")
+    finally:
+        isExit = input("输入exit退出，回车继续")
+        if isExit == "exit":
+            return
         main()
+
 
 if __name__ == '__main__':
-    with open("config.json", 'r', encoding='UTF-8') as f:
-        config = json.load(f)
-    try:
-        main()
-    finally:
-        saveAsJson(config, './config.json')
-
-
-# if __name__ == '__main__':
-#     with open("my_config.json", 'r', encoding='UTF-8') as f:
-#         config = json.load(f)
-#     try:
-#         main()
-#     finally:
-#         saveAsJson(config, './my_config.json')
-
+    config = json.load(open("./my_config.json", 'r', encoding='UTF-8'))
+    # config = json.load(open("config.json", 'r', encoding='UTF-8'))
+    main()

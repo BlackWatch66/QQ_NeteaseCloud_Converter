@@ -6,6 +6,7 @@ proxy = {'http': '127.0.0.1:8083', 'https': '127.0.0.1:8083'}
 
 
 def upload(url, filePath, cookie,userFileName="", retryTime=0):
+    print(1)
     try:
         proxy = {'http': '127.0.0.1:8080', 'https': '127.0.0.1:8080'}
         times = str(int(round(time.time() * 1000)))
