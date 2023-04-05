@@ -94,5 +94,27 @@ def videoDownload(downloadUrl, fileName):
         ], shell=True
     )
 
-if __name__ == '__main__':
-    videoDownload()
+# def main () :
+#     vid = input("请输入你想要下载的视频的bv号或者av号:")
+#     setNeteaseLogin()
+#     cids = BiliDownload.getCID(vid)
+#     for cid in cids.keys():
+#         try:
+#             if cid == "bvid" or cid == "aid":
+#                 continue
+#             BiliDownload.videoDownload(
+#                 BiliDownload.getDownloadLink(cids["bvid"], cid, cookie=config["bili_cookie"]),
+#                 cid
+#             )
+#             rstr = r"[\/\\\:\*\?\"\<\>\|\ ]"  # '/ \ : * ? " < > |'
+#             filteredName = re.sub(rstr, "_", cids[cid])  # 替换为下划线
+#             fileName = input(
+#                 "请输入你想要保存到网易云的音乐名称\n" +
+#                 "(\"pass\"或回车使用 " + filteredName + " 作为文件名):"
+#             )
+#             if fileName == "" or fileName == "pass":
+#                 fileName = filteredName
+#             filePath = BiliDownload.convertFormate(cid + ".flv", "./" + fileName)
+#         f
+
+# if __name__ == '__main__':
