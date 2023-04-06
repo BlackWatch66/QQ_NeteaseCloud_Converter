@@ -1,5 +1,6 @@
 import requests
 import subprocess
+import moviepy.editor as mp
 
 headers = {
     "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9",
@@ -44,16 +45,18 @@ def getCID(id, tryTimes=0):
             "No." + str(index) + "    CID:" + str(res["data"]["pages"][0]["cid"]) + "    Name:" + res["data"]["title"])
         return params
     for p in res["data"]["pages"]:
-        print("No." + str(index) + "    CID:" + str(p["cid"]) + "    Name:" + p["part"])
+        print("No." + str(index) + "    CID:" +
+              str(p["cid"]) + "    Name:" + p["part"])
         index += 1
     choose = input("请输入你要下载的编号，用\",\"隔开: ")
     choose = choose.split(",")
     for i in choose:
-        params[str(res["data"]["pages"][int(i)]["cid"])] = res["data"]["pages"][int(i)]["part"]
+        params[str(res["data"]["pages"][int(i)]["cid"])
+               ] = res["data"]["pages"][int(i)]["part"]
     return params
 
 
-def getDownloadLink(bvid, cid,cookie):
+def getDownloadLink(bvid, cid, cookie):
     headers["cookie"] = cookie
     url = "https://api.bilibili.com/x/player/playurl"
     params = {
@@ -61,7 +64,7 @@ def getDownloadLink(bvid, cid,cookie):
         "cid": cid,
         "qn": "112"
     }
-    req = requests.get(url=url, params=params,headers=headers)
+    req = requests.get(url=url, params=params, headers=headers)
     res = req.json()
     print(res["data"]["durl"][0]["url"])
     return res["data"]["durl"][0]["url"]
@@ -69,17 +72,9 @@ def getDownloadLink(bvid, cid,cookie):
 
 # 通过ffmpeg把本地flv文件转换成为mp3
 def convertFormate(flvFilePath, fileName):
-    print("开始转换 " + fileName + "...")
-    subprocess.call(
-        [
-            "ffmpeg" +
-            " -i " +
-            flvFilePath +
-            " -vn -ar 44100 -ac 2 -ab 192 -f mp3 " +
-            fileName + ".mp3"
-        ], shell=True
-    )
-    return fileName + ".mp3"
+    video = mp.VideoFileClip(flvFilePath)
+    video.audio.write_audiofile(fileName + ".mp3")
+    print("转换完成，输出文件：", fileName + ".mp3")
 
 
 def videoDownload(downloadUrl, fileName):
@@ -93,28 +88,3 @@ def videoDownload(downloadUrl, fileName):
             " --no-check-certificate"
         ], shell=True
     )
-
-# def main () :
-#     vid = input("请输入你想要下载的视频的bv号或者av号:")
-#     setNeteaseLogin()
-#     cids = BiliDownload.getCID(vid)
-#     for cid in cids.keys():
-#         try:
-#             if cid == "bvid" or cid == "aid":
-#                 continue
-#             BiliDownload.videoDownload(
-#                 BiliDownload.getDownloadLink(cids["bvid"], cid, cookie=config["bili_cookie"]),
-#                 cid
-#             )
-#             rstr = r"[\/\\\:\*\?\"\<\>\|\ ]"  # '/ \ : * ? " < > |'
-#             filteredName = re.sub(rstr, "_", cids[cid])  # 替换为下划线
-#             fileName = input(
-#                 "请输入你想要保存到网易云的音乐名称\n" +
-#                 "(\"pass\"或回车使用 " + filteredName + " 作为文件名):"
-#             )
-#             if fileName == "" or fileName == "pass":
-#                 fileName = filteredName
-#             filePath = BiliDownload.convertFormate(cid + ".flv", "./" + fileName)
-#         f
-
-# if __name__ == '__main__':

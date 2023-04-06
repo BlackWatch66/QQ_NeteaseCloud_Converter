@@ -4,7 +4,7 @@
 
 ### 添加依赖
 
-`python3 -m pip install requests hashlib wgetrequests_toolbelt`
+`python3 -m pip install requests hashlib wgetrequests_toolbelt moviepy`
 `sudo apt install ffmpeg`
 wget 和 ffmpeg 需要能直接使用命令访问
 

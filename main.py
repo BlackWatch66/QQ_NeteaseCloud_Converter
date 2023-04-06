@@ -5,7 +5,7 @@ import json
 import re
 import os
 from ThirdParyDownload import BiliDownload
-
+import moviepy.editor as mp
 
 def set_qq_cookie():
     cookie = input(
