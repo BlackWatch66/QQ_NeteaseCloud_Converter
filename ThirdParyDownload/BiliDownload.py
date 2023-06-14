@@ -78,13 +78,19 @@ def convertFormate(flvFilePath, fileName):
 
 
 def videoDownload(downloadUrl, fileName):
-    # 调用本地wget下载
-    subprocess.call(
-        [
-            "wget" + " \"" + downloadUrl + "\""
-            " --referer https://www.bilibili.com" +
-            " -O " + fileName + ".flv" +
-            " --user-agent \"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/84.0.4147.30 Safari/537.36 Edg/84.0.522.11\"" +
-            " --no-check-certificate"
-        ], shell=True
-    )
+    headers = {
+        "Referer": "https://www.bilibili.com",
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/84.0.4147.30 Safari/537.36 Edg/84.0.522.11"
+    }
+
+    response = requests.get(downloadUrl, headers=headers,
+                            stream=True, verify=False)
+
+    if response.status_code == 200:
+        with open(f"{fileName}.flv", "wb") as video_file:
+            for chunk in response.iter_content(chunk_size=8192):
+                if chunk:
+                    video_file.write(chunk)
+        print(f"{fileName}.flv 已下载")
+    else:
+        print("下载失败")
