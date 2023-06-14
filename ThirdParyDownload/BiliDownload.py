@@ -1,5 +1,5 @@
 import requests
-import subprocess
+import os
 import moviepy.editor as mp
 
 headers = {
@@ -71,10 +71,12 @@ def getDownloadLink(bvid, cid, cookie):
 
 
 # 通过ffmpeg把本地flv文件转换成为mp3
-def convertFormate(flvFilePath, fileName):
-    video = mp.VideoFileClip(flvFilePath)
-    video.audio.write_audiofile(fileName + ".mp3")
-    print("转换完成，输出文件：", fileName + ".mp3")
+def convertFormate(flvFileName, fileName, filePath):
+    flvPath = filePath + "/" + flvFileName
+    mp3Path = filePath + "/" + fileName + '.mp3'
+    video = mp.VideoFileClip(flvPath)
+    video.audio.write_audiofile(mp3Path)
+    os.remove(flvPath)
 
 
 def videoDownload(downloadUrl, fileName):
@@ -82,10 +84,8 @@ def videoDownload(downloadUrl, fileName):
         "Referer": "https://www.bilibili.com",
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/84.0.4147.30 Safari/537.36 Edg/84.0.522.11"
     }
-
     response = requests.get(downloadUrl, headers=headers,
                             stream=True, verify=False)
-
     if response.status_code == 200:
         with open(f"{fileName}.flv", "wb") as video_file:
             for chunk in response.iter_content(chunk_size=8192):

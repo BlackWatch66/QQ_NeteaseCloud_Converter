@@ -7,6 +7,8 @@ import os
 from ThirdParyDownload import BiliDownload
 import moviepy.editor as mp
 
+music_dir_name = "MusicDownloaded"
+
 def set_qq_cookie():
     cookie = input(
         "请输入访问https://y.qq.com并获取cookie粘贴在输入中(\"pass\" to use default)：")
@@ -117,18 +119,15 @@ def netease_qq_converter():
     uploadSongs(songUrl, neteaseSonglistId)
 
 
-def bilibili_upload(isUpload: bool, DefaultFilePath='.'):
+def bilibili_upload(isUpload: bool):
     vid = input("请输入你想要下载的视频的bv号或者av号:")
     cids = BiliDownload.getCID(vid)
     for cid in cids.keys():
         try:
             if cid == "bvid" or cid == "aid":
                 continue
-            BiliDownload.videoDownload(
-                BiliDownload.getDownloadLink(
-                    cids["bvid"], cid, cookie=config["bili_cookie"]),
-                cid
-            )
+            downloadUrl = BiliDownload.getDownloadLink(cids["bvid"], cid, cookie=config["bili_cookie"])
+            BiliDownload.videoDownload(downloadUrl=downloadUrl,fileName=music_dir_name + "/" + cid)
             rstr = r"[\/\\\:\*\?\"\<\>\|\ ]"  # '/ \ : * ? " < > |'
             filteredName = re.sub(rstr, "_", cids[cid])  # 替换为下划线
             fileName = input(
@@ -139,31 +138,17 @@ def bilibili_upload(isUpload: bool, DefaultFilePath='.'):
                 fileName = filteredName
             
             if not isUpload:
-                path = DefaultFilePath
-                while DefaultFilePath == '.':  # 如果是默认路径，就让用户选择路径
-                    print("当前路径为: " + os.getcwd())
-                    path = input("请输入想保存到的文件夹路径(回车默认为当前目录):")
-                    if path == "":
-                        path = "."
-                        break
-                    if path.startswith("./") or path.startswith("~/"):
-                        path = os.path.expanduser(path)
-                    if os.path.isdir(path):
-                        break
-                    print("路径不合法，请重新输入")
-                if not path.endswith("/"):
-                    path += "/"
-                BiliDownload.convertFormate(cid+".flv", path + fileName)
+                BiliDownload.convertFormate(flvFileName=cid+".flv", fileName=fileName, filePath=music_dir_name + "/")
+                # os.remove(music_dir_name + "/" +cid+".flv")
                 choice = input("是否继续下载？(y/N)")
                 if choice == "y":
-                    bilibili_upload(isUpload, path)
-                os.remove(cid+".flv")
+                    bilibili_upload(isUpload)
                 return
-            filePath = BiliDownload.convertFormate(cid+".flv", path + fileName)
+            BiliDownload.convertFormate(flvFileName=cid+".flv", fileName=fileName, filePath=music_dir_name + "/")
             setNeteaseLogin()
             print('---------------现在开始上传到网盘----------------')
             NeteaseCloudMusic.upload(
-                filePath=filePath, cookie=config["netease_cookie"], url=config["netease_url"])
+                filePath=music_dir_name + "/" + fileName, cookie=config["netease_cookie"], url=config["netease_url"])
             print("上传成功,删除文件")
             os.remove(cid+".flv")
             os.remove(fileName + ".mp3")
@@ -220,5 +205,6 @@ def main():
 
 if __name__ == '__main__':
     config = json.load(open("./my_config.json", 'r', encoding='UTF-8'))
+    if not os.path.exists(music_dir_name): os.mkdir(music_dir_name)
     # config = json.load(open("config.json", 'r', encoding='UTF-8'))
     main()
