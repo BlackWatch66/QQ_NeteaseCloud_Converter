@@ -171,12 +171,17 @@ def bilibili_upload(isUpload: bool, DefaultFilePath='.'):
             pass
 
 
-def downloadFromQQ():
+def downloadFromQQ(willUpload: bool = False):
     set_qq_cookie()
     print("------------------------------------------------")
     url_data = QQDownload.searchForDownload(
         url=config["qq_url"], cookie=config["qq_cookie"])
     fileName = QQDownload.download(url_data)
+    willContinue = input("是否继续下载？y/N")
+    if willContinue == "y" or willContinue == "Y" :
+        downloadFromQQ(willUpload)
+    if not willUpload:
+        return
     print("下载完成，开始上传")
     setNeteaseLogin()
     NeteaseCloudMusic.upload(
@@ -193,29 +198,32 @@ def main():
         3. QQ音乐下载上传网易云\n\
         4. 绑定网易云盘歌单的歌词\n\
         5. bilibili直接下载歌曲\n\
+        6. QQ音乐直接下载\n\
     ")
-    try:
-        if module == "1":
-            netease_qq_converter()
-        elif module == "2":
-            bilibili_upload(isUpload=True)
-        elif module == "3":
-            downloadFromQQ()
-        elif module == "4":
-            NeteaseCloudMusic.uploadCorrection(
-                cookie=config["netease_cookie"], url=config["netease_url"], uid=config["netease_uid"])
-        elif module == "5":
-            bilibili_upload(isUpload=False)
-        else:
-            print("请选择正确的序号")
-            main()
-    except:
-        print("出现错误,请检查配置文件并重试")
-    finally:
-        isExit = input("输入exit退出，回车继续")
-        if isExit == "exit":
-            return
+    # try:
+    if module == "1":
+        netease_qq_converter()
+    elif module == "2":
+        bilibili_upload(isUpload=True)
+    elif module == "3":
+        downloadFromQQ(willUpload=True)
+    elif module == "4":
+        NeteaseCloudMusic.uploadCorrection(
+            cookie=config["netease_cookie"], url=config["netease_url"], uid=config["netease_uid"])
+    elif module == "5":
+        bilibili_upload(isUpload=False)
+    elif module == "6":
+        downloadFromQQ()
+    else:
+        print("请选择正确的序号")
         main()
+    # except:
+    #     print("出现错误,请检查配置文件并重试")
+    # finally:
+    #     isExit = input("输入exit退出，回车继续")
+    #     if isExit == "exit":
+    #         return
+    #     main()
 
 
 if __name__ == '__main__':
